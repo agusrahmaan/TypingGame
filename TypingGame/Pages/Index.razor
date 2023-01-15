@@ -1,0 +1,155 @@
+﻿@page "/"
+
+@*menggunakan class stats*@
+@using TypingGame.NewFolder
+
+<style>
+    /*untuk mengubah tampilan si huruf*/
+    .game-text{
+        font-size: 72px;
+        font-weight: bold;
+        margin-right: 4px;
+    }
+
+    /*mewarnai huruf jika inputan benar*/
+    .correct{
+        color: green;
+    }
+
+    /*mewarnai huruf jika inputan salah*/
+    .wrong{
+        color: red;
+    }
+</style>
+
+
+<div @ref="parentDiv" @onkeydown="OnType" tabindex="0"> 
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    @for(var ch = 0; ch < generatedChar.Length; ch++)
+                    {
+                        <span class="game-text @status[ch]">
+                            @generatedChar[ch]
+                        </span>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <span>Correct: @stats.Correct</span>
+                    <span>Missed: @stats.Missed</span>
+                    <span>Total: @stats.Total</span>
+                    <span>Accuracy: @stats.Accuracy %</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code{
+    //membuat variabel untuk menampung jumlah alphabet
+    string alphabet = "QWERTYUIOPASDFGHJKLZXCVBNM";
+    //membuat variabel char array untuk mengecek setiap huruf dari string alphabet
+    char[] generatedChar = new char[7];
+    string[] status = new string[7];
+
+    //fungsi untuk merandom
+    Random random = new Random();
+
+    //membuat objek dari class stats
+    Stats stats;
+
+    public ElementReference parentDiv;
+
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+            await parentDiv.FocusAsync();
+    }
+
+    //fungsi untuk mnentukan nilai awal dari setiap poin
+    private void setUpGame()
+    {
+        stats = new Stats();
+        stats.Correct = 0;
+        stats.Missed = 0;
+        stats.Total = 0;
+        stats.Accuracy = 0;
+
+        //menampilkan huruf secara acak
+        GeneratedChar();
+    }
+
+    //fungsi untuk menjalankan program
+    protected override void OnInitialized()
+    {
+        setUpGame();
+    }
+
+    //variabel untuk mengisi index
+    int cursor = 0;
+    public void OnType(KeyboardEventArgs e)
+    {
+        //mengecek inputan apakah sama seperti huruf yang ditampilkan
+        if (e.Key == generatedChar[cursor].ToString().ToLower())
+        {
+            //menambah poin benar
+            stats.Correct++;
+            //memberikan warna pada huruf
+            status[cursor] = "correct";
+            //menegcek huruf sesuai index
+            cursor++;
+        }
+        else
+        {
+            //menambah poin salah
+            stats.Missed++;
+            //memberikan warna pada huruf
+            status[cursor] = "wrong";
+        }
+
+        //jika index cursor sudah melebihi panjang karakternya
+        if(cursor >= 7)
+        {
+            //array baru
+            status = new string[7];
+            //memulai ulang dari index awal
+            cursor = 0;
+            //menampilkan huruf secara acak
+            GeneratedChar();
+        }
+
+        //jika jumlah salah sudah melewati 5
+        if(stats.Missed > 5)
+        {
+            //array baru
+            status = new string[7];
+            //memulai ulang dari index awal
+            cursor = 0;
+            //Merestart ulang game
+            setUpGame();
+        }
+
+        //menjumlahkan total inputan
+        stats.CountTotal();
+        //menjumlahkan akurasi ketepatan inputan
+        stats.CountAccuracy();
+    }
+
+    //fungsi untuk menampilkan huruf secara acak
+    public void GeneratedChar()
+    {
+        for (int i = 0; i < 7; i++)
+        {
+            generatedChar[i] = alphabet[random.Next(alphabet.Length)];
+        }
+    }
+}
